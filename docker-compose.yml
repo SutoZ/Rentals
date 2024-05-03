@@ -1,0 +1,46 @@
+version: '3.4'
+
+
+services:
+  rentals.host:
+    image: ${DOCKER_REGISTRY-}rental.host
+    environment:
+     ASPNETCORE_ENVIRONMENT: Development
+     ConnectionStrings__RentalsConnection: Server=rental.db,1433; Database=Rentals; User Id=SA; password=My_StrongnewPassword_!123; Integrated Security=False; Encrypt=False; TrustServerCertificate=True
+    container_name: rentals.host
+    build:
+      context: .
+      dockerfile: ../../../../../../Users/Zoli/source/repos/Rentals/Rentals.Host/Dockerfile
+    depends_on: 
+     - rentals.db
+    ports:
+     - "5000:5000"
+
+  rentals.db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: rental.db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "My_StrongnewPassword_!123"
+    ports: 
+      - "1433:1433"
+
+  seq:
+    image: datalust/seq:latest
+    container_name: rental.seq
+    environment:
+     ACCEPT_EULA: "Y"
+    ports:
+     - "5343:80"
+    volumes:
+     - ../docker/rental/logs:/data
+
+  swagger:
+    image: swaggerapi/swagger-ui
+    container_name: rental.swagger_ui
+    ports:
+     - "80:8080"
+    volumes:
+      - ../doc:/usr/share/nginx/html/doc
+    environment:
+      API_URL: doc/openapi.yaml
